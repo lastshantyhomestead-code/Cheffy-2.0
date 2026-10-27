@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="theme-color" content="#526d79"/><meta name="apple-mobile-web-app-capable" content="yes"/><meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Cheffy 2.0"/>
+<link rel="manifest" href="manifest.json"/><link rel="apple-touch-icon" href="icon-192.png"/><link rel="icon" href="icon-192.png"/>
+<link rel="stylesheet" href="styles.css"/><title>Cheffy 2.0 | Coastal Kitchen</title>
+</head>
+<body>
+<header class="app-header">
+ <div class="head-row"><div class="brand"><span class="brand-icon">◒</span><div><h1>Cheffy <span class="ver">2.0</span></h1><small>Coastal Kitchen</small></div></div><button class="sync-indicator" id="syncStatus" data-go="settings" type="button" aria-label="Sync status">○ Local</button></div>
+</header>
+<main id="main" tabindex="-1"><div class="loading"><div class="spinner"></div>Preparing your kitchen…</div></main>
+<nav class="bottom-nav" aria-label="Cheffy navigation">
+ <button type="button" data-go="week" class="active"><span class="nav-icon">▦</span><span>My Week</span></button>
+ <button type="button" data-go="build"><span class="nav-icon">✦</span><span>Build</span></button>
+ <button type="button" data-go="have"><span class="nav-icon">▤</span><span>Have Now</span></button>
+ <button type="button" data-go="grocery"><span class="nav-icon">☷</span><span>Groceries</span></button>
+ <button type="button" data-go="recipes"><span class="nav-icon">▣</span><span>Recipes</span></button>
+</nav>
+<div id="modal" class="modal hide" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal-shade" data-close-modal="1"></div><div class="modal-card"><div class="modal-head"><h2 id="modalTitle"></h2><button aria-label="Close" id="closeModal" class="icon-btn" type="button">×</button></div><div id="modalBody" class="modal-body"></div></div></div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script src="app.js" defer></script>
+</body></html>
