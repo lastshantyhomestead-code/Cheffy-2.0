@@ -60,7 +60,28 @@ function salads(){return sortedNames(r=>r.category==='Salads / Sides');}
 function bakes(){return ['Oatmeal Breakfast Muffins','Banana Bread / Muffins',"Susan's Chocolate Chip Cookies",'Brownies – Helen','Rice Crispy Squares','Chocolate Chip Drop Cookies','Chocolate Chip Cookies',"Hershey's Chocolate Chip Cookies"].filter(n=>getRecipe(n)?.cardComplete);}
 function has(name){return Boolean(getRecipe(name));}
 function onHand(key){return state.pantry.find(x=>x.key===key)||{key,have:false,extra:false,notes:'',status:'unconfirmed'};}
-function currentWeek(){return state.weeks.find(w=>w.id===state.currentWeekId)||null;}
+// Prefer the saved current-week pointer, but recover from spreadsheet Date formatting
+// or an absent pointer without changing any saved meals or cloud records.
+function canonicalWeekId(value){
+ if(value==null)return '';
+ const raw=String(value).trim();
+ const match=raw.match(/^(\d{4}-\d{2}-\d{2})(?:T|\s|$)/);
+ return match?match[1]:raw;
+}
+function reconcileCurrentWeek(){
+ if(!Array.isArray(state.weeks)||!state.weeks.length)return;
+ const desired=canonicalWeekId(state.currentWeekId);
+ const match=state.weeks.find(w=>canonicalWeekId(w.id)===desired||canonicalWeekId(w.weekStart)===desired);
+ if(match){state.currentWeekId=match.id;return;}
+ // On a missing pointer, show the active calendar week when available.
+ const today=todayDate(),active=state.weeks.find(w=>{
+  const start=canonicalWeekId(w.weekStart||w.id);
+  return /^\d{4}-\d{2}-\d{2}$/.test(start)&&start<=today&&today<=plusDays(start,6);
+ });
+ const fallback=active||[...state.weeks].sort((a,b)=>canonicalWeekId(b.weekStart).localeCompare(canonicalWeekId(a.weekStart)))[0];
+ if(fallback)state.currentWeekId=fallback.id;
+}
+function currentWeek(){reconcileCurrentWeek();return state.weeks.find(w=>w.id===state.currentWeekId)||null;}
 function stateApply(op){const p=op.payload||{};
  if(op.action==='saveWeek'){
   const old=state.weeks.find(w=>w.id===p.week.id);
@@ -115,7 +136,7 @@ function updateSync(){const t=document.getElementById('syncStatus');if(!t)return
  t.style.color=cloudIssue?'#a45e49':'var(--blue)';}
 async function reloadRemote(force=false){if(!config.url||!config.code||queue.length&&!force)return;
  try{const out=await jsonp('snapshot');if(queue.length)return;
- state=out.state;persist();lastCloud=Date.now();cloudIssue='';render();updateSync();
+ state=out.state;reconcileCurrentWeek();persist();lastCloud=Date.now();cloudIssue='';render();updateSync();
  }catch(err){cloudIssue=err.message;updateSync();}}
 function wait(ms){return new Promise(r=>setTimeout(r,ms));}
 async function processQueue(){if(processing||!config.url||!config.code||!navigator.onLine)return;
@@ -440,8 +461,8 @@ async function connectHousehold(){let url=syncUrl(document.getElementById('scrip
     const local=structuredClone(state);state=remote;persist();local.weeks.forEach(w=>commit('saveWeek',{week:w,setCurrent:w.id===local.currentWeekId}));
     local.pantry.forEach(p=>commit('setPantry',p));local.extras.forEach(x=>{commit('addExtra',x);if(x.checked)commit('checkExtra',{id:x.id,checked:true});});
     await processQueue();}
-   else{state=remote;persist();}
-  }else{state=remote;persist();}
+   else{state=remote;reconcileCurrentWeek();persist();}
+  }else{state=remote;reconcileCurrentWeek();persist();}
   cloudIssue='';toast('Household Sheet connected');render();
  }catch(e){cloudIssue=e.message;toast('Connection failed: '+e.message);updateSync();}
 }
@@ -489,7 +510,7 @@ function inputHandler(e){const t=e.target;if(t.id==='haveSearch'){let pos=t.sele
  if(t.id==='pantrySearch'){let pos=t.selectionStart;pantrySearch=t.value;render();let field=document.getElementById('pantrySearch');field.focus();field.setSelectionRange(pos,pos);}
  if(t.id==='extraName')extraPicker=t.value;
 }
-async function importFile(file){if(!file)return;try{let obj=JSON.parse(await file.text());if(obj.cheffy!==2||!obj.state||!Array.isArray(obj.state.weeks))throw Error('Not a valid Cheffy 2.0 backup');if(!confirm('Replace your local saved weeks, pantry and extras with this backup?'))return;state=obj.state;persist();toast('Backup imported on this device');render();}catch(e){toast('Import failed: '+e.message);}}
+async function importFile(file){if(!file)return;try{let obj=JSON.parse(await file.text());if(obj.cheffy!==2||!obj.state||!Array.isArray(obj.state.weeks))throw Error('Not a valid Cheffy 2.0 backup');if(!confirm('Replace your local saved weeks, pantry and extras with this backup?'))return;state=obj.state;reconcileCurrentWeek();persist();toast('Backup imported on this device');render();}catch(e){toast('Import failed: '+e.message);}}
 async function init(){try{
  const response=await fetch('catalog.json');if(!response.ok)throw Error('Recipe catalogue unavailable');catalog=await response.json();recipeNames=Object.keys(catalog.recipes);
  // Fix broad auto-generated ingredient labels that would create false reservations and shopping duplicates.
