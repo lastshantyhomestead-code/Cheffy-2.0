@@ -1,18 +1,33 @@
-Cheffy 2.0 — Coastal Kitchen
-==========================
-This folder contains the public, installable Cheffy 2.0 web app.
-Publish these files to the ROOT of a NEW GitHub Pages repository.
+Cheffy 2.0 — Grocery & Pantry Accuracy Update
+=============================================
+Version: 2026-10-29
 
-Files: index.html, app.js, styles.css, catalog.json,
-manifest.json, service-worker.js, icon-192.png, icon-512.png.
+Public GitHub Pages app files. Upload the contents of this folder (not the ZIP
+itself) to the root of your EXISTING Cheffy 2.0 GitHub Pages repository.
+DO NOT upload Code.gs or your household access code to GitHub.
+DO NOT replace Cheffy Classic.
 
-Do not upload your private Google Apps Script or household passphrase
-into a public GitHub repository. See the separate SETUP_GUIDE.md and
-Cheffy_2_0_Private_Google_Sheets_Setup.zip download.
+Changes:
+- Grocery ingredients for simple breakfasts, including English muffins + one
+  selected spread; quantities multiply by household portions (default 3).
+- Generic lunches now warn until you choose leftovers, sandwiches, wraps or
+  a manually checked soup; no silent skipping.
+- Breakfasts, lunches, dinners, recipe sides, salad, baking, pizza and veggie
+  box now contribute to the shopping list.
+- Pizza toppings selectable; veggie box rotates for NEW weeks only.
+- Grocery cupboard statuses separate from purchased checkboxes.
+- Explicit Update Pantry, Add Purchased Items to Pantry, Finish Week review.
+- All upcoming meals included in pantry protection.
+- Recalculate Grocery List action preserves the existing menu, matching
+  checkmarks, cupboard reviews and unmatched older ingredients (flagged as
+  carried over and removable).
+- Safer sync compatibility with the existing Google Sheets data.
 
-Features: 105 recipe cards; all 16 Classic menus for import;
-Build My Week; pantry-aware Use What We Have; protected ingredients;
-weekly veggie box; grocery checkboxes; separate Extras list;
-Saved weeks and optional Google Sheets sync; offline-capable PWA.
+IMPORTANT: The currently saved week's shopping list does NOT recalculate
+on deployment. Open Groceries > Recalculate grocery list when you are ready.
+Your saved meals, salad, baking, pantry, extras and checked grocery items
+are not automatically reset by installing these files.
 
-The app is independent of Cheffy Classic. No grocery price integrations.
+Install Google Apps Script update FIRST and deploy a NEW VERSION of your
+existing web app deployment. Detailed instructions are in the separate
+Cheffy_2_0_UPDATE_INSTRUCTIONS.txt provided with the download.
