@@ -25,10 +25,24 @@ function weeklyBox(plan){if(plan?.veggieBox===false)return [];
  if(Array.isArray(plan?.veggieSelection))return [...plan.veggieSelection.map(k=>VEG_OPTIONS.find(v=>v.key===k)).filter(Boolean),{key:'hummus',name:'Hummus',amount:'1 tub',min:1,unit:'tub'}];
  return OLD_BOX; // preserve veggie-box choices in existing saved weeks
 }
-function shuffleBox(plan){const used=uniq(plan.days.flatMap(d=>[d.dinner,...(d.sides?.dinner||[])].flatMap(n=>getRecipe(n)?.keys||[])));
- const old=plan.veggieSelection||[];const seed=Date.now()%997;
- const ranked=VEG_OPTIONS.map((v,i)=>({key:v.key,score:(used.includes(v.key)?8:0)+(old.includes(v.key)?-7:0)+((i*31+seed*7)%19)/20})).sort((a,b)=>b.score-a.score);
- plan.veggieSelection=ranked.slice(0,3).map(x=>x.key);return plan.veggieSelection;
+function shuffleBox(plan){
+ // Pick a NEW combination, not just a different order of the same three vegetables.
+ // Prefer ingredients already needed in dinners, but don't let overlap force repeats.
+ const used=new Set(uniq((plan.days||[]).flatMap(d=>[d.dinner,...(d.sides?.dinner||[])].flatMap(n=>getRecipe(n)?.keys||[]))));
+ const previous=new Set(plan.veggieSelection||[]);
+ const available=VEG_OPTIONS.filter(v=>!previous.has(v.key));
+ const candidates=available.length>=3?available:VEG_OPTIONS;
+ const choices=[];
+ const pool=[...candidates];
+ while(choices.length<3&&pool.length){
+  const weights=pool.map(v=>used.has(v.key)?3:1);
+  let pick=Math.random()*weights.reduce((a,b)=>a+b,0);
+  let index=0;
+  while(index<weights.length-1 && pick>=weights[index]){pick-=weights[index];index++;}
+  choices.push(pool.splice(index,1)[0].key);
+ }
+ plan.veggieSelection=choices;
+ return choices;
 }
 function spreadKey(plan,i){return plan?.breakfastSpreads?.[i]||'peanut_butter';}
 function isSpreadMeal(n){return /^(English Muffin \+ Spread|Toast \+ Peanut Butter \/ Jam)$/.test(n||'');}
@@ -172,7 +186,7 @@ function renderWeek(){const w=currentWeek();if(!w)return `<div class="page-heade
 function mealLinks(d,meal){const refs=[d[meal],...(d.sides?.[meal]||[])].filter(Boolean);if(!refs.length)return '<span>Not planned</span>';return refs.map((name,i)=>`<button class="meal-name" data-recipe="${safe(name)}">${i?'+ ':''}${safe(name)}</button>`).join('');}
 function prepItems(p){const a=[{id:'vegbox',text:'Prepare veggie snack box: '+weeklyBox(p).map(v=>v.name).join(', ')+'. Refill midweek.'},{id:'salad',text:'Prepare weekly salad: '+(p.salad||'select a salad')},{id:'bake',text:'Make weekly baked snack: '+(p.bake||'select a snack')},{id:'pizza',text:'Check Wednesday pizza dough ingredients and homemade red sauce'}];
  if(p.advancePrep)a.push({id:'advance',text:p.advancePrep});
- const recipeKeys=uniq(p.days.flatMap(d=>[d.dinner,...(d.sides?.dinner||[])].flatMap(n=>getRecipe(n)?.keys||[])));
+ const recipeKeys=uniq(p.days.flatMap(d=>[d.dinner,...(d.sides?.dinner||[])].flatMap(n=>getRecipe(n)?.keys||[]))); 
  if(recipeKeys.includes('rice'))a.push({id:'rice',text:'Cook a batch of rice for the meals using rice'});
  if(recipeKeys.includes('black beans')||recipeKeys.includes('chickpeas'))a.push({id:'beans',text:'Drain or prepare beans/chickpeas for multiple recipes'});
  if(recipeKeys.includes('carrots')||recipeKeys.includes('red peppers')||recipeKeys.includes('onions'))a.push({id:'chop',text:'Prep shared vegetables for dinners as practical'});
